@@ -1,0 +1,318 @@
+version: 2
+
+models:
+
+      - name: stg_proyecto_civica__country
+        description: "Country reference table staged from SQL Server."
+        columns:
+          - name: country_id
+            data_type: varchar
+            description: "Country code (primary key)."
+            tests: [not_null, unique]
+          - name: desc_country
+            data_type: varchar
+            description: "Country description/name."
+            tests: [not_null]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__event_type
+        description: "Event type reference table (catalog of event categories)."
+        columns:
+          - name: event_type_id
+            data_type: varchar
+            description: "Event type identifier (primary key)."
+            tests: [not_null, unique]
+          - name: desc_event_type
+            data_type: varchar
+            description: "Human-readable event type description."
+            tests: [not_null]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__events
+        description: "Raw user/product/order events with categorical type (by id)."
+        columns:
+          - name: event_id
+            data_type: varchar
+            description: "Event natural key."
+            tests: [not_null, unique]
+          - name: user_id
+            data_type: varchar
+            description: "User identifier (nullable if anonymous)."
+          - name: product_id
+            data_type: varchar
+            description: "Product identifier (FK to products; nullable for some events)."
+            tests:
+              - relationships:
+                  to: ref('stg_proyecto_civica__products')
+                  field: product_id
+          - name: order_id
+            data_type: varchar
+            description: "Order identifier (FK to orders; optional depending on event)."
+            tests:
+              - relationships:
+                  to: ref('stg_proyecto_civica__orders')
+                  field: order_id
+          - name: session_id
+            data_type: varchar
+            description: "Session identifier."
+          - name: event_created
+            data_type: timestamp_tz
+            description: "Event creation timestamp."
+            tests: [not_null]
+          - name: event_type_id
+            data_type: varchar
+            description: "Event type reference (FK to event_type)."
+            tests:
+              - not_null
+              - relationships:
+                  to: ref('stg_proyecto_civica__event_type')
+                  field: event_type_id
+          - name: page_url
+            data_type: varchar
+            description: "Normalized page URL where the event occurred."
+          - name: date_deleted
+            data_type: boolean
+            description: "Soft delete flag from source."
+            tests:
+              - accepted_values:
+                  values: [true, false]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__order_items
+        description: "Order line items, one row per order-product."
+        columns:
+          - name: order_items_id
+            data_type: varchar
+            description: "Order line identifier (primary key)."
+            tests: [not_null, unique]
+          - name: order_id
+            data_type: varchar
+            description: "Order identifier (FK to orders)."
+            tests:
+              - not_null
+              - relationships:
+                  to: ref('stg_proyecto_civica__orders')
+                  field: order_id
+          - name: product_id
+            data_type: varchar
+            description: "Product identifier (FK to products)."
+            tests:
+              - not_null
+              - relationships:
+                  to: ref('stg_proyecto_civica__products')
+                  field: product_id
+          - name: quantity
+            data_type: number
+            description: "Units ordered (must be >= 1)."
+            tests:
+              - not_null
+              - dbt_utils.expression_is_true:
+                  expression: "quantity >= 1"
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__orders
+        description: "Orders placed by users; one row per order."
+        columns:
+          - name: order_id
+            data_type: varchar
+            description: "Order identifier (primary key)."
+            tests: [not_null, unique]
+          - name: shipping_service_id
+            data_type: varchar
+            description: "Shipping service (FK to shipping_service)."
+            tests:
+              - relationships:
+                  to: ref('stg_proyecto_civica__shipping_service')
+                  field: shipping_service_id
+          - name: shipping_cost
+            data_type: float
+            description: "Shipping cost (non-negative)."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "shipping_cost IS NULL OR shipping_cost >= 0"
+          - name: address_id
+            data_type: varchar
+            description: "Delivery address (FK to addresses)."
+            tests:
+              - relationships:
+                  to: ref('stg_proyecto_civica__addresses')
+                  field: address_id
+          - name: created_at
+            data_type: timestamp_tz
+            description: "Order creation timestamp."
+            tests: [not_null]
+          - name: promo_id
+            data_type: varchar
+            description: "Applied promotion (FK to promos; nullable)."
+            tests:
+              - relationships:
+                  to: ref('stg_proyecto_civica__promos')
+                  field: promo_id
+          - name: estimated_delivery_at
+            data_type: timestamp_tz
+            description: "Estimated delivery timestamp."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "estimated_delivery_at IS NULL OR estimated_delivery_at >= created_at"
+          - name: order_cost
+            data_type: float
+            description: "Subtotal before shipping and discounts (non-negative)."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "order_cost IS NULL OR order_cost >= 0"
+          - name: user_id
+            data_type: varchar
+            description: "User identifier."
+          - name: order_total
+            data_type: float
+            description: "Final total (non-negative, usually >= order_cost)."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "order_total IS NULL OR order_total >= 0"
+          - name: delivered_at
+            data_type: timestamp_tz
+            description: "Actual delivery timestamp."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "delivered_at IS NULL OR delivered_at >= created_at"
+          - name: tracking_id
+            data_type: varchar
+            description: "Carrier tracking identifier."
+          - name: status
+            data_type: varchar
+            description: "Order status code (e.g., PLACED, SHIPPED, DELIVERED)."
+          - name: _fivetran_deleted
+            data_type: boolean
+            description: "Soft delete flag from connector."
+            tests:
+              - accepted_values:
+                  values: [true, false]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__products
+        description: "Product master data staged from SQL Server."
+        columns:
+          - name: product_id
+            data_type: varchar
+            description: "Product natural key."
+            tests: [not_null, unique]
+          - name: product_price
+            data_type: number
+            description: "List price (non-negative)."
+            tests:
+              - not_null
+              - dbt_utils.expression_is_true:
+                  expression: "product_price >= 0"
+          - name: product_name
+            data_type: varchar
+            description: "Product display name."
+            tests: [not_null]
+          - name: inventory
+            data_type: number
+            description: "Current inventory level (non-negative)."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "inventory IS NULL OR inventory >= 0"
+          - name: date_deleted
+            data_type: boolean
+            description: "Soft delete flag from source."
+            tests:
+              - accepted_values:
+                  values: [true, false]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__promos
+        description: "Promotion catalog staged from SQL Server."
+        columns:
+          - name: promo_id
+            data_type: varchar
+            description: "Promotion identifier (primary key)."
+            tests: [not_null, unique]
+          - name: desc_promo
+            data_type: varchar
+            description: "Promotion description."
+            tests: [not_null]
+          - name: discount_dollars
+            data_type: number
+            description: "Discount amount in dollars (non-negative)."
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "discount_dollars IS NULL OR discount_dollars >= 0"
+          - name: status_mode
+            data_type: varchar
+            description: "Promotion status code."
+            tests:
+              - accepted_values:
+                  values: ['ACTIVE', 'INACTIVE']
+          - name: date_deleted
+            data_type: boolean
+            description: "Soft delete flag from source."
+            tests:
+              - accepted_values:
+                  values: [true, false]
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+      - name: stg_proyecto_civica__shipping_service
+        description: "Shipping services reference (carrier/service level)."
+        columns:
+          - name: shipping_service_id
+            data_type: varchar
+            description: "Shipping service identifier (primary key)."
+            tests: [not_null, unique]
+          - name: desc_shipping_service
+            data_type: varchar
+            description: "Human-readable service name."
+            tests: [not_null]
+          - name: estimated_delivery_hour
+            data_type: timestamp_tz
+            description: "Estimated delivery time reference."
+          - name: delivered_at_hour
+            data_type: timestamp_tz
+            description: "Observed delivery time reference."
+
+      - name: stg_proyecto_civica__state
+        description: "State/region reference table staged from SQL Server."
+        columns:
+          - name: state_id
+            data_type: varchar
+            description: "State/region code (primary key)."
+            tests: [not_null, unique]
+          - name: desc_state
+            data_type: varchar
+            description: "State/region name."
+            tests: [not_null]
+          - name: country
+            data_type: varchar
+            description: "Owning country (FK to country)."
+            tests:
+              - not_null
+              - relationships:
+                  to: ref('stg_proyecto_civica__country')
+                  field: country
+          - name: date_load
+            data_type: timestamp_tz
+            description: "Ingestion timestamp."
+            tests: [not_null]
+
+     
