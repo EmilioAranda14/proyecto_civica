@@ -5,6 +5,7 @@ with base as (
     select distinct
         promo_status
     from {{ ref('stg_proyecto_civica__promos') }}
+    where promo_status is not null
 
 ),
 

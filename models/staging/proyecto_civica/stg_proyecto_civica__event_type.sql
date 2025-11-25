@@ -1,19 +1,21 @@
-{{ config(materialized='view') }}
+{{ config(materialized = 'view') }}
 
 with base as (
 
     select distinct
-        event_type
-    from {{ source('proyecto_civica_dev_bronze', 'raw_events') }}
-    where event_type is not null
+        coalesce(
+            nullif(lower(trim(event_type)), ''),
+            'unknown'
+        ) as event_type_code
+    from {{ ref('stg_proyecto_civica__events') }}
 
 ),
 
 final as (
 
     select
-        {{ dbt_utils.generate_surrogate_key(['event_type']) }} as event_type_sk,
-        event_type                                             as event_type_code
+        {{ dbt_utils.generate_surrogate_key(['event_type_code']) }} as event_type_sk,
+        event_type_code
     from base
 
 )

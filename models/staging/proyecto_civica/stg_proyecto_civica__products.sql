@@ -1,24 +1,35 @@
-{{
-  config(
-    materialized='view'
-  )
-}}
+{{ config(materialized = 'view') }}
 
-WITH src_products AS (
-    SELECT * 
-    FROM {{ source('proyecto_civica_dev_bronze', 'raw_products') }} 
-    ),
+with src_products as (
 
-products_change AS (
-    SELECT
-        product_id::varchar                                             as product_id,                            
-        CAST(price AS DECIMAL(12,2))                                    as product_price,
-        name                                                            as product_name,
-        case when cast(inventory as int) > 0 then 1 else 0 end          as is_in_stock,       
-        _fivetran_deleted                                               as date_deleted,
-        convert_timezone ('UTC', _fivetran_synced)                      as date_load
+    select
+        product_id::varchar        as product_id,
+        name::varchar              as product_name,
+        price::number(12,2)        as product_price,
+        inventory::number(12,0)    as inventory,
+        convert_timezone('UTC', _fivetran_synced) as date_load
+    from {{ source('proyecto_civica_dev_bronze', 'raw_products') }}
+    where _fivetran_deleted is null
 
-    FROM src_products   
-    )
+),
 
-SELECT * FROM products_change
+final as (
+
+    select
+        {{ dbt_utils.generate_surrogate_key(['product_id']) }} as product_sk,
+        product_id,
+        product_name,
+        product_price,
+        inventory,
+        case
+            when inventory > 0 then 'Yes'
+            else 'No'
+        end as is_in_stock,
+        date_load
+    from src_products
+
+)
+
+select *
+from final
+

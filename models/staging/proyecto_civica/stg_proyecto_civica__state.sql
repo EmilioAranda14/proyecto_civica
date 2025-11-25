@@ -12,9 +12,9 @@ with base as (
 final as (
 
     select
-        {{ dbt_utils.generate_surrogate_key(['country','state']) }} as state_sk,
-        state                                                       as desc_state,
-        {{ dbt_utils.generate_surrogate_key(['country']) }}         as country_sk
+        {{ dbt_utils.generate_surrogate_key(['country', 'state']) }} as state_sk, 
+        state                                                        as desc_state,
+        {{ dbt_utils.generate_surrogate_key(['country']) }}          as country_sk
     from base
 
 )

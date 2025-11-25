@@ -124,7 +124,7 @@ sources:
             data_tests:
               - not_null
               - positive_values
-          - name: addres_id
+          - name: address_id
             description: >
               Delivery address identifier.
             data_tests:
@@ -235,38 +235,24 @@ sources:
 
       - name: raw_promos
         description: >
-          Promotion/impression events shown or applied to users and orders.
+          Master table of promotions/discounts available in the system.
         loaded_at_field: _fivetran_synced
         columns:
-          - name: event_id
+          - name: promo_id
             description: >
-              Unique identifier of the promo/event record.
+              Unique identifier of the promotion.
             data_tests:
               - unique
               - not_null
-          - name: page_url
+          - name: discount
             description: >
-              Page where the promotion was shown or applied.
-          - name: event_type
-            description: >
-              Type of interaction with the promotion.
-          - name: user_id
-            description: >
-              User associated with the promo.
-          - name: product_id
-            description: >
-              Product associated with the promo.
-          - name: session_id
-            description: >
-              Browsing session where the promo interaction occurred.
-          - name: created_at
-            description: >
-              Promo event timestamp.
+              Discount to be applied by the promotion (percentage or fixed amount).
             data_tests:
               - not_null
-          - name: order_id
+              - positive_values
+          - name: status
             description: >
-              Order to which the promo was applied.
+              Status of the promotion (e.g., active, inactive).
           - name: _fivetran_deleted
             description: >
               Soft-delete flag set by Fivetran.
@@ -342,3 +328,4 @@ sources:
               Timestamp of the last load performed by Fivetran.
             data_tests:
               - not_null
+

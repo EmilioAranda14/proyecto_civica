@@ -13,10 +13,10 @@ with base as (
 final as (
 
     select
-        {{ dbt_utils.generate_surrogate_key(['country','state','zipcode']) }} as zipcode_sk,
-        zipcode                                                               as desc_zipcode,
-        {{ dbt_utils.generate_surrogate_key(['country','state']) }}           as state_sk,
-        {{ dbt_utils.generate_surrogate_key(['country']) }}                   as country_sk
+        {{ dbt_utils.generate_surrogate_key(['country', 'state', 'zipcode']) }} as zipcode_sk,
+        zipcode                                                                 as desc_zipcode,
+        {{ dbt_utils.generate_surrogate_key(['country', 'state']) }}            as state_sk,
+        {{ dbt_utils.generate_surrogate_key(['country']) }}                     as country_sk
     from base
 
 )

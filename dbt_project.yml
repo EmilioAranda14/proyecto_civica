@@ -2,7 +2,7 @@
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
-name: 'my_new_project'
+name: 'proyecto_civica'
 version: '1.0.0'
 config-version: 2
 
@@ -36,18 +36,18 @@ clean-targets:         # directories to be removed by `dbt clean`
 # using the `{{ config(...) }}` macro.
 
 models:
+
   +transient: false
   proyecto_civica:
-
-   staging:
+    staging:
       +materialized: view
       +database: PROYECTO_CIVICA_DEV_SILVER
-      +schema: stg
-  intermediate:
+      +schema: staging
+    intermediate:
       +materialized: view   
       +database: PROYECTO_CIVICA_DEV_SILVER
-      +schema: int
-  marts:
+      +schema: intermediate
+    marts:
       +materialized: table
       +database: PROYECTO_CIVICA_DEV_GOLD
       core:
@@ -57,4 +57,10 @@ models:
 
 seeds:
   +schema: "SEEDS"
-  +database: PROYECTO_CIVICA_DEV_BRONCE          
+  +database: PROYECTO_CIVICA_DEV_BRONCE    
+
+snapshots:
+  +transient: false
+  +target_database: PROYECTO_CIVICA_DEV_SILVER
+  +target_schema: snapshots
+  

@@ -1,0 +1,580 @@
+version: 2
+
+models:
+  - name: stg_proyecto_civica__addresses 
+    description: "Staging table for shipping and billing addresses linked to users and orders."
+    columns:
+      - name: address_id
+        data_type: varchar
+        description: "Unique identifier of the address in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: zipcode
+        data_type: varchar
+        description: "Postal code associated with the address."
+        tests:
+          - not_null
+
+      - name: address_line
+        data_type: varchar
+        description: "Full text of the address, including street name and number."
+        tests:
+          - not_null
+
+      - name: country
+        data_type: varchar
+        description: "Country code or identifier for the address."
+        tests:
+          - not_null
+
+      - name: state
+        data_type: varchar
+        description: "Region or state code or identifier for the address."
+
+      - name: country_sk
+        data_type: varchar
+        description: "Surrogate key of the country for this address."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__country')
+              field: country_sk
+
+      - name: state_sk
+        data_type: varchar
+        description: "Surrogate key of the state or region for this address."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__state')
+              field: state_sk
+
+      - name: zipcode_sk
+        data_type: varchar
+        description: "Surrogate key of the postal code for this address."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__zipcode')
+              field: zipcode_sk
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the record was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__country
+    description: "Country dimension from the transactional source."
+    columns:
+      - name: country_sk
+        data_type: varchar
+        description: "Surrogate key of the country in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: desc_country
+        data_type: varchar
+        description: "Human-readable description of the country."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__event_type
+    description: "Catalog of event types for web or app interactions."
+    columns:
+      - name: event_type_sk
+        data_type: varchar
+        description: "Surrogate key of the event type in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: event_type_code
+        data_type: varchar
+        description: "Code of the event type, for example page_view or add_to_cart."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__events
+    description: "User behavior events on the website or app, such as visits, clicks, and purchases."
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: "Unique identifier of the registered event."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_id
+        data_type: varchar
+        description: "Identifier of the user generating the event, when identified."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__users')
+              field: user_id
+
+      - name: product_id
+        data_type: varchar
+        description: "Identifier of the product associated with the event, if applicable."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__products')
+              field: product_id
+
+      - name: order_id
+        data_type: varchar
+        description: "Identifier of the order related to the event, for purchase-related events."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__orders')
+              field: order_id
+
+      - name: session_id
+        data_type: varchar
+        description: "Identifier of the browsing session in which the event occurs."
+
+      - name: event_created_at
+        data_type: timestamp_tz
+        description: "Original timestamp when the event was generated."
+        tests:
+          - not_null
+
+      - name: event_date
+        data_type: date
+        description: "Date of the event derived from event_created_at for daily aggregations."
+        tests:
+          - not_null
+
+      - name: page_url
+        data_type: varchar
+        description: "URL of the page where the event occurred."
+
+      - name: event_type
+        data_type: varchar
+        description: "Type of event according to the event type catalog."
+        tests:
+          - not_null
+
+      - name: event_type_sk
+        data_type: varchar
+        description: "Surrogate key of the event type."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__event_type')
+              field: event_type_sk
+
+      - name: date_deleted
+        data_type: boolean
+        description: "Logical deletion flag for the event in the source system."
+        tests:
+          - accepted_values:
+              values: [true, false]
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the event was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__order_items
+    description: "Order line items containing products and quantities for each order."
+    columns:
+      - name: order_items_id
+        data_type: varchar
+        description: "Unique identifier of the order line item."
+        tests:
+          - not_null
+          - unique
+
+      - name: order_id
+        data_type: varchar
+        description: "Identifier of the order to which the line item belongs."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__orders')
+              field: order_id
+
+      - name: product_id
+        data_type: varchar
+        description: "Identifier of the product in the order line item."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__products')
+              field: product_id
+
+      - name: quantity
+        data_type: number
+        description: "Number of product units in the order line item."
+        tests:
+          - not_null
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the order line item was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__order_status
+    description: "Catalog of possible order statuses."
+    columns:
+      - name: order_status_sk
+        data_type: varchar
+        description: "Surrogate key of the order status in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: order_status_code
+        data_type: varchar
+        description: "Code of the order status, for example CREATED, SHIPPED, or CANCELLED."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__orders
+    description: "Order headers placed by users on the platform."
+    columns:
+      - name: order_id
+        data_type: varchar
+        description: "Unique identifier of the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: shipping_service_code
+        data_type: varchar
+        description: "Code of the shipping service used for the order."
+
+      - name: shipping_service_id
+        data_type: varchar
+        description: "Identifier of the shipping service according to the shipping service catalog."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__shipping_service')
+              field: shipping_service_sk
+
+      - name: shipping_cost
+        data_type: number
+        description: "Shipping cost associated with the order."
+        tests:
+          - not_null
+
+      - name: address_id
+        data_type: varchar
+        description: "Identifier of the delivery address for the order."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__addresses')
+              field: address_id
+
+      - name: order_created_at
+        data_type: timestamp_tz
+        description: "Timestamp when the order was created."
+        tests:
+          - not_null
+
+      - name: promo_id
+        data_type: varchar
+        description: "Identifier of the promotion applied to the order, if any."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__promos')
+              field: promo_id
+
+      - name: estimated_delivery_at
+        data_type: timestamp_tz
+        description: "Estimated timestamp for the delivery of the order."
+
+      - name: order_cost
+        data_type: number
+        description: "Total cost of the order items before discounts and shipping."
+        tests:
+          - not_null
+
+      - name: user_id
+        data_type: varchar
+        description: "Identifier of the user who placed the order."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__users')
+              field: user_id
+
+      - name: order_total
+        data_type: number
+        description: "Final order amount including discounts and shipping costs."
+        tests:
+          - not_null
+
+      - name: delivered_at
+        data_type: timestamp_tz
+        description: "Actual delivery timestamp of the order, if it has been delivered."
+
+      - name: tracking_id
+        data_type: varchar
+        description: "Shipment tracking code provided by the carrier."
+
+      - name: status
+        data_type: varchar
+        description: "Current status of the order according to the order status catalog."
+        tests:
+          - not_null
+
+      - name: order_status_id
+        data_type: varchar
+        description: "Surrogate key of the current order status."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__order_status')
+              field: order_status_sk
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the order was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__products
+    description: "Catalog of products available on the platform."
+    columns:
+      - name: product_id
+        data_type: varchar
+        description: "Unique identifier of the product."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_price
+        data_type: number
+        description: "Current unit price of the product."
+        tests:
+          - not_null
+
+      - name: product_name
+        data_type: varchar
+        description: "Descriptive name of the product."
+        tests:
+          - not_null
+
+      - name: is_in_stock
+        data_type: number
+        description: "Stock availability indicator, typically stored as a numeric binary value."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: date_deleted
+        data_type: boolean
+        description: "Logical deletion flag for the product in the source system."
+        tests:
+          - accepted_values:
+              values: [true, false]
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the product was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__promo_status
+    description: "Catalog of promotion statuses."
+    columns:
+      - name: promo_status_sk
+        data_type: varchar
+        description: "Surrogate key of the promotion status in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: promo_status_code
+        data_type: varchar
+        description: "Code of the promotion status, for example active or expired."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__promos
+    description: "Catalog of promotions and discounts applicable to orders or products."
+    columns:
+      - name: promo_id
+        data_type: varchar
+        description: "Unique identifier of the promotion."
+        tests:
+          - not_null
+          - unique
+
+      - name: desc_promo
+        data_type: varchar
+        description: "Description of the promotion."
+        tests:
+          - not_null
+
+      - name: discount
+        data_type: number
+        description: "Discount offered by the promotion, expressed as an amount or percentage depending on business logic."
+        tests:
+          - not_null
+
+      - name: promo_status
+        data_type: varchar
+        description: "Current status of the promotion according to the promotion status catalog."
+        tests:
+          - not_null
+
+      - name: promo_status_sk
+        data_type: varchar
+        description: "Surrogate key of the promotion status."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__promo_status')
+              field: promo_status_sk
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the promotion was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__shipping_service
+    description: "Catalog of shipping services offered for orders."
+    columns:
+      - name: shipping_service_sk
+        data_type: varchar
+        description: "Surrogate key of the shipping service in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: desc_shipping_service
+        data_type: varchar
+        description: "Description or commercial name of the shipping service."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__state
+    description: "Catalog of states or regions within each country."
+    columns:
+      - name: state_sk
+        data_type: varchar
+        description: "Surrogate key of the state or region in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: desc_state
+        data_type: varchar
+        description: "Human-readable description of the state or region."
+        tests:
+          - not_null
+
+      - name: country_sk
+        data_type: varchar
+        description: "Country key to which the state or region belongs."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__country')
+              field: country_sk
+
+  - name: stg_proyecto_civica__users
+    description: "Registered users on the platform and their basic attributes."
+    columns:
+      - name: user_id
+        data_type: varchar
+        description: "Unique identifier of the user."
+        tests:
+          - not_null
+          - unique
+
+      - name: first_name
+        data_type: varchar
+        description: "User's first name."
+        tests:
+          - not_null
+
+      - name: last_name
+        data_type: varchar
+        description: "User's last name."
+        tests:
+          - not_null
+
+      - name: email
+        data_type: varchar
+        description: "User's contact email address."
+        tests:
+          - not_null
+          - unique
+
+      - name: phone_number
+        data_type: varchar
+        description: "User's contact phone number." 
+
+      - name: address_id
+        data_type: varchar
+        description: "Identifier of the main address associated with the user."
+        tests:
+          - relationships:
+              to: ref('stg_proyecto_civica__addresses')
+              field: address_id
+
+      - name: total_orders
+        data_type: number
+        description: "Total number of orders placed by the user according to the source."
+        tests:
+          - not_null
+
+      - name: user_created_at
+        data_type: timestamp_tz
+        description: "Timestamp when the user was created on the platform."
+        tests:
+          - not_null
+
+      - name: user_updated_at
+        data_type: timestamp_tz
+        description: "Timestamp of the last update to the user's data."
+        tests:
+          - not_null
+
+      - name: date_load
+        data_type: timestamp_tz
+        description: "Timestamp when the user record was loaded into the data warehouse."
+        tests:
+          - not_null
+
+  - name: stg_proyecto_civica__zipcode
+    description: "Catalog of postal codes and their relationship with states and countries."
+    columns:
+      - name: zipcode_sk
+        data_type: varchar
+        description: "Surrogate key of the postal code in the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: desc_zipcode
+        data_type: varchar
+        description: "Human-readable postal code or description."
+        tests:
+          - not_null
+
+      - name: state_sk
+        data_type: varchar
+        description: "State or region key associated with the postal code."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__state')
+              field: state_sk
+
+      - name: country_sk
+        data_type: varchar
+        description: "Country key associated with the postal code."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_proyecto_civica__country')
+              field: country_sk
