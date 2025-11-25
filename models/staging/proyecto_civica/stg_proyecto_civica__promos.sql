@@ -21,7 +21,6 @@ with src_promos as (
     where _fivetran_deleted is null
 
 ),
-
 no_promo_row as (
 
     select
@@ -45,7 +44,6 @@ promos_change as (
     select * from no_promo_row
 
 )
-
 select *
 from promos_change
 

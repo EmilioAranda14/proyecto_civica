@@ -28,7 +28,6 @@ final as (
         last_name,
         email,
         phone_number,
-        total_orders,
         address_id,
         first_name || ' ' || last_name as user_full_name
     from source

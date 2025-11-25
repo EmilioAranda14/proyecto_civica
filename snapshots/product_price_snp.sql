@@ -10,8 +10,7 @@
   )
 }}
 
-select
-    *
+select *
 from {{ source('proyecto_civica_dev_bronze', 'raw_products') }}
 
 {% endsnapshot %}
