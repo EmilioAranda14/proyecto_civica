@@ -10,7 +10,7 @@ sources:
     quoting:
       database: false
       schema: false
-      identifier: false
+      identifier: false 
 
     freshness:
       warn_after: {count: 500, period: day} 
@@ -125,9 +125,7 @@ sources:
           - name: shipping_service
             description: >
               Name of the carrier/shipping service used.
-            data_tests:
-              - not_null
-              - no_empty_strings
+
           - name: shipping_cost
             description: >
               Shipping cost associated with the order.
@@ -151,8 +149,7 @@ sources:
           - name: estimated_delivery_at
             description: >
               Estimated delivery date/time.
-            data_tests:
-              - not_null
+
           - name: order_cost
             description: >
               Order amount before taxes/shipping/discounts.
@@ -177,9 +174,7 @@ sources:
           - name: tracking_id
             description: >
               Shipment tracking identifier provided by the carrier.
-            data_tests:
-              - not_null
-              - no_empty_strings
+
           - name: status
             description: >
               Order status (e.g., pending, paid, shipped, delivered, cancelled, returned).

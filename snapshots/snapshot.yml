@@ -35,10 +35,7 @@ snapshots:
 
     columns:
       - name: promo_id
-        description: "Business key of the promotion used as unique identifier across versions."
-        tests:
-          - not_null
-          - unique
+        description: "Business key of the promotion used as unique identifier in the snapshot."
 
       - name: promo_desc
         description: "Human-readable description of the promotion."
@@ -63,3 +60,4 @@ snapshots:
 
       - name: dbt_valid_to
         description: "Timestamp when this version of the promotion stopped being valid."
+

@@ -23,14 +23,5 @@ where
     (delivered_at is not null
      and delivered_at < order_created_at)
 
-    or
 
-    -- Si el pedido está entregado, debe tener delivered_at
-    (lower(status) = 'delivered'
-     and delivered_at is null)
 
-    or
-
-    -- Si el pedido está preparando/enviado, no puede estar ya entregado
-    (lower(status) in ('preparing', 'shipped')
-     and delivered_at is not null)

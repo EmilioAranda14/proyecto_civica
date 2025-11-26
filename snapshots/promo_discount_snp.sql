@@ -10,6 +10,7 @@
 }}
 
 select
+    promo_id,
     promo_desc,
     promo_value,
     promo_status,

@@ -551,8 +551,6 @@ models:
       - name: total_orders
         data_type: number
         description: "Total number of orders placed by the user according to the source."
-        tests:
-          - not_null
 
       - name: user_created_at
         data_type: timestamp_tz

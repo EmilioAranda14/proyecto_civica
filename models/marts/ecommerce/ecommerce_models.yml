@@ -1,0 +1,68 @@
+version: 2
+
+models:
+
+  # =========================
+  # GOLD MARTS / USE CASES
+  # =========================
+
+  - name: mart_product_conversion
+    description: >
+      Gold mart to analyse the digital funnel at product level, combining page views and add-to-cart
+      events from fact_events with actual purchases from fact_order_items.
+    columns:
+      - name: product_sk
+        description: "Surrogate key of the product."
+      - name: product_id
+        description: "Business key of the product."
+      - name: product_name
+        description: "Product name."
+      - name: page_view_events
+        description: "Number of page_view events for the product."
+      - name: add_to_cart_events
+        description: "Number of add_to_cart events for the product."
+      - name: add_to_cart_users
+        description: "Number of distinct users who added the product to cart."
+      - name: purchase_orders
+        description: "Number of distinct orders that include the product."
+      - name: purchase_quantity
+        description: "Total quantity purchased of the product."
+      - name: purchase_revenue
+        description: "Revenue associated with the product purchases."
+      - name: view_to_add_to_cart_rate
+        description: "Conversion rate from views to add_to_cart."
+      - name: add_to_cart_to_purchase_rate
+        description: "Conversion rate from add_to_cart to purchase."
+      - name: rank_by_quantity
+        description: "Ranking of the product by quantity sold."
+      - name: rank_by_revenue
+        description: "Ranking of the product by revenue."
+      - name: rank_by_view_to_cart_rate
+        description: "Ranking of the product by view-to-cart conversion rate."
+
+  - name: mart_shipping_service_profile
+    description: >
+      Gold mart that builds a performance profile for each shipping service: volume of orders, revenue,
+      total shipping cost, average shipping cost percentage, delivery speed and on-time rate. Designed
+      to feed comparison tables and radar charts in Power BI.
+    columns:
+      - name: shipping_service_sk
+        description: "Surrogate key of the shipping service."
+      - name: shipping_service_id
+        description: "Business key of the shipping service."
+      - name: shipping_service_name
+        description: "Name of the shipping service."
+      - name: orders_count
+        description: "Number of orders handled by the service."
+      - name: revenue_total
+        description: "Total revenue of those orders."
+      - name: shipping_cost_total
+        description: "Total shipping cost of those orders."
+      - name: avg_shipping_cost_pct
+        description: "Average share of shipping cost over order total."
+      - name: avg_days_to_deliver
+        description: "Average delivery time in days."
+      - name: on_time_rate
+        description: "Share of orders delivered on time."
+      - name: rank_by_orders
+        description: "Ranking of the shipping service by number of orders."
