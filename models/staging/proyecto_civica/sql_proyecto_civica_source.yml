@@ -125,7 +125,7 @@ sources:
           - name: shipping_service
             description: >
               Name of the carrier/shipping service used.
-
+              
           - name: shipping_cost
             description: >
               Shipping cost associated with the order.
@@ -174,7 +174,6 @@ sources:
           - name: tracking_id
             description: >
               Shipment tracking identifier provided by the carrier.
-
           - name: status
             description: >
               Order status (e.g., pending, paid, shipped, delivered, cancelled, returned).
