@@ -1,0 +1,85 @@
+version: 2
+
+models:
+  - name: int_proyecto_civica__order_items_promos
+    description: >
+      Intermediate model at order-line grain that enriches order_items
+      with allocated shipping cost, order amounts and promo amounts.
+      It is the base for the fact_order_items table.
+
+    columns:
+      - name: order_items_id
+        description: "Surrogate key for the order line."
+        tests:
+          - not_null
+          - unique
+          - no_empty_strings
+
+      - name: order_id
+        description: "Business key of the order that the line belongs to."
+        tests:
+          - not_null
+          - no_empty_strings
+
+      - name: product_id
+        description: "Business key of the purchased product."
+        tests:
+          - not_null
+          - no_empty_strings
+
+      - name: quantity
+        description: "Number of units purchased in this order line."
+        tests:
+          - not_null
+
+      - name: date_load
+        description: "Technical load timestamp used for incremental logic."
+        tests:
+          - not_null
+
+      # SHIPPING
+
+      - name: shipping_cost_order
+        description: "Total shipping cost at order header level."
+
+      - name: order_total_quantity
+        description: "Total quantity of items in the whole order."
+
+      - name: shipping_cost_unit
+        description: "Allocated shipping cost per unit within the order."
+
+      - name: shipping_cost_line
+        description: "Allocated shipping cost for this order line (quantity * shipping_cost_unit)."
+
+      # ORDER COST
+
+      - name: order_cost_order
+        description: "Order cost at header level before allocation."
+
+      - name: order_cost_unit
+        description: "Allocated order cost per unit within the order."
+
+      - name: order_cost_line
+        description: "Allocated order cost for this order line (quantity * order_cost_unit)."
+
+      # ORDER TOTAL
+
+      - name: order_total_order
+        description: "Total order amount at header level (after shipping and promos)."
+
+      - name: order_total_unit
+        description: "Allocated total order amount per unit within the order."
+
+      - name: order_total_line
+        description: "Allocated total order amount for this order line (quantity * order_total_unit)."
+
+      # PROMO
+
+      - name: promo_amount_order
+        description: "Total promo or discount amount at order level."
+
+      - name: promo_amount_unit
+        description: "Allocated promo or discount amount per unit within the order."
+
+      - name: promo_amount_line
+        description: "Allocated promo or discount amount for this order line (quantity * promo_amount_unit)."
