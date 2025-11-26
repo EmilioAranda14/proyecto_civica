@@ -1,0 +1,349 @@
+version: 2
+
+models:
+  # ======================
+  # DIMENSIONS
+  # ======================
+
+  - name: dim_addresses
+    description: >
+      Dimension table with unique shipping and billing addresses used
+      across orders and users.
+    columns:
+      - name: address_sk
+        description: "Surrogate key for the address used from fact tables."
+        tests:
+          - not_null
+          - unique
+
+      - name: address_id
+        description: "Business key of the address from the source system."
+        tests:
+          - not_null
+
+      - name: address_line
+        description: "Full street address line (street, number, etc.)."
+
+      - name: zipcode
+        description: "Postal or ZIP code of the address."
+
+      - name: state
+        description: "State, province or region of the address."
+
+      - name: country
+        description: "Country of the address."
+
+  - name: dim_event_type
+    description: >
+      Dimension that standardises the different event types coming
+      from the events stream.
+    columns:
+      - name: event_type_sk
+        description: "Surrogate key for the event type."
+        tests:
+          - not_null
+          - unique
+
+      - name: event_type_code
+        description: "Normalized event type code (e.g. 'page_view', 'add_to_cart')."
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_date
+    description: >
+      Date dimension built with dbt_date.get_date_dimension, containing
+      one row per calendar day.
+    columns:
+      - name: date_day
+        description: "Calendar date at day grain."
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_order_status
+    description: >
+      Dimension that groups and normalises the different order
+      statuses coming from the source system.
+    columns:
+      - name: order_status_sk
+        description: "Surrogate key for the order status."
+        tests:
+          - not_null
+          - unique
+
+      - name: order_status_code
+        description: "Order status code (e.g. 'pending', 'shipped')."
+        tests:
+          - not_null
+          - unique
+
+      - name: order_status_desc
+        description: "Human readable description of the order status."
+
+  - name: dim_products
+    description: >
+      Dimension with the product catalog, prices and stock information.
+    columns:
+      - name: product_sk
+        description: "Surrogate key for the product used from fact tables."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        description: "Business key of the product from the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_name
+        description: "Product name as shown to customers."
+
+      - name: product_price
+        description: "Current unit price of the product."
+
+      - name: is_in_stock
+        description: "Flag that indicates if the product is currently in stock."
+
+  - name: dim_promos
+    description: >
+      Dimension containing the promotions and discounts available
+      in the e-commerce system.
+    columns:
+      - name: promo_sk
+        description: "Surrogate key for the promotion used from fact tables."
+        tests:
+          - not_null
+          - unique
+
+      - name: promo_id
+        description: "Business key of the promotion from the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: promo_desc
+        description: "Human readable description of the promotion."
+
+      - name: promo_value
+        description: "Discount percentage or amount associated with the promo."
+
+      - name: promo_status
+        description: "Current status of the promo (e.g. 'active', 'inactive', 'expired')."
+
+  - name: dim_shipping_service
+    description: >
+      Dimension with the different shipping services / carriers
+      used to deliver orders.
+    columns:
+      - name: shipping_service_sk
+        description: "Surrogate key for the shipping service used from fact tables."
+        tests:
+          - not_null
+          - unique
+
+      - name: shipping_service_id
+        description: "Business key / identifier of the shipping service in the source."
+
+      - name: shipping_service_name
+        description: "Name of the shipping service or carrier."
+
+  - name: dim_users
+    description: >
+      Dimension with customer master data and a few behavioural
+      attributes.
+    columns:
+      - name: user_sk
+        description: "Surrogate key for the user used from fact tables."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_id
+        description: "Business key of the user from the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_created_at
+        description: "Timestamp when the user account was created."
+
+      - name: first_name
+        description: "Customer first name."
+
+      - name: last_name
+        description: "Customer last name."
+
+      - name: email
+        description: "Customer email address."
+
+      - name: phone_number
+        description: "Customer phone number when available."
+
+      - name: total_orders
+        description: "Total number of orders placed by this user (lifetime metric)."
+
+      - name: address_id
+        description: "Business key of the default address of the user."
+
+      - name: user_full_name
+        description: "Convenience field concatenating first_name and last_name."
+
+  # ======================
+  # FACTS
+  # ======================
+
+  - name: fact_events
+    description: >
+      Event fact table at event grain, containing all user interactions
+      on the website or app (page views, cart events, etc.).
+    columns:
+      - name: event_id
+        description: "Business key of the event from the source system."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_sk
+        description: "Surrogate key of the user who generated the event."
+        tests:
+          - relationships:
+              to: ref('dim_users')
+              field: user_sk
+
+      - name: product_sk
+        description: "Surrogate key of the product associated with the event, when applicable."
+        tests:
+          - relationships:
+              to: ref('dim_products')
+              field: product_sk
+
+      - name: event_type_sk
+        description: "Surrogate key of the event type."
+        tests:
+          - relationships:
+              to: ref('dim_event_type')
+              field: event_type_sk
+
+      - name: user_id
+        description: "Business key of the user that generated the event."
+
+      - name: product_id
+        description: "Business key of the product associated with the event, when applicable."
+
+      - name: order_id
+        description: "Order associated with the event, when applicable."
+
+      - name: session_id
+        description: "Session identifier grouping multiple events."
+
+      - name: page_url
+        description: "Page URL where the event occurred."
+
+      - name: event_type
+        description: "Event type code as in the original events table."
+
+      - name: event_date
+        description: "Date (day) when the event occurred, joined from dim_date."
+
+      - name: event_created_at
+        description: "Timestamp when the event occurred."
+
+      - name: date_load
+        description: "Technical load timestamp used for incremental logic."
+
+  - name: fact_order_items
+    description: >
+      Fact table at order-line grain combining commercial information,
+      allocated shipping costs and allocated promo amounts.
+    columns:
+      - name: order_items_id
+        description: "Surrogate key of the order line."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_sk
+        description: "Surrogate key for the customer who placed the order."
+        tests:
+          - relationships:
+              to: ref('dim_users')
+              field: user_sk
+
+      - name: product_sk
+        description: "Surrogate key for the purchased product."
+        tests:
+          - relationships:
+              to: ref('dim_products')
+              field: product_sk
+
+      - name: promo_sk
+        description: "Surrogate key for the promotion applied to the order, when applicable."
+        tests:
+          - relationships:
+              to: ref('dim_promos')
+              field: promo_sk
+
+      - name: order_status_sk
+        description: "Surrogate key for the current order status."
+        tests:
+          - relationships:
+              to: ref('dim_order_status')
+              field: order_status_sk
+
+      - name: address_sk
+        description: "Surrogate key for the shipping/billing address."
+        tests:
+          - relationships:
+              to: ref('dim_addresses')
+              field: address_sk
+
+      - name: shipping_service_sk
+        description: "Surrogate key for the shipping service used to deliver the order."
+        tests:
+          - relationships:
+              to: ref('dim_shipping_service')
+              field: shipping_service_sk
+
+      - name: order_date
+        description: "Date (day) when the order was created, joined from dim_date."
+
+      - name: order_id
+        description: "Business key of the order that the line belongs to."
+
+      - name: quantity
+        description: "Number of units purchased in this order line."
+
+      - name: order_total_quantity
+        description: "Total number of units in the whole order."
+
+      - name: shipping_cost_order
+        description: "Total shipping cost at order level before allocation."
+
+      - name: shipping_cost_line
+        description: "Shipping cost allocated to this order line."
+
+      - name: promo_amount_line
+        description: "Promo or discount amount allocated to this order line."
+
+      - name: order_cost_line
+        description: "Allocated order cost for this order line."
+
+      - name: order_total_line
+        description: "Allocated total order amount for this order line."
+
+      - name: order_created_at
+        description: "Timestamp when the order was created."
+
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp for the order."
+
+      - name: delivered_at
+        description: "Actual delivery timestamp for the order, when available."
+
+      - name: tracking_id
+        description: "Tracking identifier provided by the shipping service."
+
+      - name: date_load
+        description: "Technical load timestamp used for incremental logic."

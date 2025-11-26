@@ -10,28 +10,34 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: zipcode
         data_type: varchar
         description: "Postal code associated with the address."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: address_line
         data_type: varchar
         description: "Full text of the address, including street name and number."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: country
         data_type: varchar
         description: "Country code or identifier for the address."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: state
         data_type: varchar
         description: "Region or state code or identifier for the address."
+        tests:
+          - no_empty_strings
 
       - name: country_sk
         data_type: varchar
@@ -79,6 +85,7 @@ models:
         description: "Human-readable description of the country."
         tests:
           - not_null
+          - no_empty_strings
 
   - name: stg_proyecto_civica__event_type
     description: "Catalog of event types for web or app interactions."
@@ -95,6 +102,7 @@ models:
         description: "Code of the event type, for example page_view or add_to_cart."
         tests:
           - not_null
+          - no_empty_strings
 
   - name: stg_proyecto_civica__events
     description: "User behavior events on the website or app, such as visits, clicks, and purchases."
@@ -105,6 +113,7 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: user_id
         data_type: varchar
@@ -149,12 +158,15 @@ models:
       - name: page_url
         data_type: varchar
         description: "URL of the page where the event occurred."
+        tests:
+          - no_empty_strings
 
       - name: event_type
         data_type: varchar
         description: "Type of event according to the event type catalog."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: event_type_sk
         data_type: varchar
@@ -186,12 +198,14 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: order_id
         data_type: varchar
         description: "Identifier of the order to which the line item belongs."
         tests:
           - not_null
+          - no_empty_strings
           - relationships:
               to: ref('stg_proyecto_civica__orders')
               field: order_id
@@ -201,6 +215,7 @@ models:
         description: "Identifier of the product in the order line item."
         tests:
           - not_null
+          - no_empty_strings
           - relationships:
               to: ref('stg_proyecto_civica__products')
               field: product_id
@@ -232,6 +247,7 @@ models:
         description: "Code of the order status, for example CREATED, SHIPPED, or CANCELLED."
         tests:
           - not_null
+          - no_empty_strings
 
   - name: stg_proyecto_civica__orders
     description: "Order headers placed by users on the platform."
@@ -242,10 +258,13 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: shipping_service_code
         data_type: varchar
         description: "Code of the shipping service used for the order."
+        tests:
+          - no_empty_strings
 
       - name: shipping_service_id
         data_type: varchar
@@ -266,6 +285,7 @@ models:
         description: "Identifier of the delivery address for the order."
         tests:
           - not_null
+          - no_empty_strings
           - relationships:
               to: ref('stg_proyecto_civica__addresses')
               field: address_id
@@ -299,6 +319,7 @@ models:
         description: "Identifier of the user who placed the order."
         tests:
           - not_null
+          - no_empty_strings
           - relationships:
               to: ref('stg_proyecto_civica__users')
               field: user_id
@@ -322,6 +343,7 @@ models:
         description: "Current status of the order according to the order status catalog."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: order_status_id
         data_type: varchar
@@ -346,6 +368,7 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: product_price
         data_type: number
@@ -358,6 +381,7 @@ models:
         description: "Descriptive name of the product."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: is_in_stock
         data_type: number
@@ -365,14 +389,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: [0, 1]
-
-      - name: date_deleted
-        data_type: boolean
-        description: "Logical deletion flag for the product in the source system."
-        tests:
-          - accepted_values:
-              values: [true, false]
+              values: ['No', 'Yes']
 
       - name: date_load
         data_type: timestamp_tz
@@ -395,6 +412,7 @@ models:
         description: "Code of the promotion status, for example active or expired."
         tests:
           - not_null
+          - no_empty_strings
 
   - name: stg_proyecto_civica__promos
     description: "Catalog of promotions and discounts applicable to orders or products."
@@ -405,14 +423,16 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
-      - name: desc_promo
+      - name: promo_desc
         data_type: varchar
         description: "Description of the promotion."
         tests:
           - not_null
+          - no_empty_strings
 
-      - name: discount
+      - name: promo_value
         data_type: number
         description: "Discount offered by the promotion, expressed as an amount or percentage depending on business logic."
         tests:
@@ -423,6 +443,7 @@ models:
         description: "Current status of the promotion according to the promotion status catalog."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: promo_status_sk
         data_type: varchar
@@ -449,11 +470,12 @@ models:
           - not_null
           - unique
 
-      - name: desc_shipping_service
+      - name: shipping_service_name
         data_type: varchar
         description: "Description or commercial name of the shipping service."
         tests:
           - not_null
+          - no_empty_strings
 
   - name: stg_proyecto_civica__state
     description: "Catalog of states or regions within each country."
@@ -470,6 +492,7 @@ models:
         description: "Human-readable description of the state or region."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: country_sk
         data_type: varchar
@@ -489,18 +512,21 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: first_name
         data_type: varchar
         description: "User's first name."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: last_name
         data_type: varchar
         description: "User's last name."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: email
         data_type: varchar
@@ -508,6 +534,7 @@ models:
         tests:
           - not_null
           - unique
+          - no_empty_strings
 
       - name: phone_number
         data_type: varchar
@@ -560,6 +587,7 @@ models:
         description: "Human-readable postal code or description."
         tests:
           - not_null
+          - no_empty_strings
 
       - name: state_sk
         data_type: varchar

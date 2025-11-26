@@ -5,7 +5,7 @@ sources:
     description: > 
       Raw data demo from Database.
     schema: PROYECTO_CIVICA_DEV_BRONZE
-    database: PROYECTO_CIVICA_DEV_BRONZE
+    database: "{{ env_var('DBT_ENVIRONMENTS') }}_BRONZE" 
 
     quoting:
       database: false
@@ -29,21 +29,25 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: zipcode
             description: >
               Postal/ZIP code of the address.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: address
             description: >
               Full address line (street, number, etc.).
             data_tests:
               - not_null
+              - no_empty_strings
           - name: state
             description: >
               State/Province of the address.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: _fivetran_deleted
             description: >
               Soft-delete flag set by Fivetran (true/false or timestamp).
@@ -64,21 +68,25 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: page_url
             description: >
               URL of the page where the event occurred.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: event_type
             description: >
               Event type (e.g., page_view, add_to_cart, checkout, purchase).
             data_tests:
               - not_null
+              - no_empty_strings
           - name: user_id
             description: >
               Identifier of the user who generated the event.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: product_id
             description: >
               Identifier of the product associated with the event.
@@ -113,11 +121,13 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: shipping_service
             description: >
               Name of the carrier/shipping service used.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: shipping_cost
             description: >
               Shipping cost associated with the order.
@@ -129,6 +139,7 @@ sources:
               Delivery address identifier.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: created_at
             description: >
               Order creation timestamp.
@@ -153,6 +164,7 @@ sources:
               Identifier of the user who placed the order.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: order_total
             description: >
               Total order amount (includes discounts, taxes, and shipping).
@@ -167,6 +179,7 @@ sources:
               Shipment tracking identifier provided by the carrier.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: status
             description: >
               Order status (e.g., pending, paid, shipped, delivered, cancelled, returned).
@@ -174,6 +187,7 @@ sources:
               - not_null
               - accepted_values:
                   values: ['preparing','shipped','delivered']
+              - no_empty_strings
           - name: _fivetran_deleted
             description: >
               Soft-delete flag set by Fivetran.
@@ -194,6 +208,7 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: updated_at
             description: >
               Timestamp of the last profile update.
@@ -224,6 +239,7 @@ sources:
               User's email address.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: _fivetran_deleted
             description: >
               Soft-delete flag set by Fivetran.
@@ -244,6 +260,7 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: discount
             description: >
               Discount to be applied by the promotion (percentage or fixed amount).
@@ -272,11 +289,13 @@ sources:
               Order to which the line item belongs.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: product_id
             description: >
               Product included in the order line.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: quantity
             description: >
               Number of product units in the line item.
@@ -303,6 +322,7 @@ sources:
             data_tests:
               - unique
               - not_null
+              - no_empty_strings
           - name: price
             description: >
               Current unit price of the product.
@@ -314,6 +334,7 @@ sources:
               Product name.
             data_tests:
               - not_null
+              - no_empty_strings
           - name: inventory
             description: >
               Units available in stock.
@@ -328,4 +349,3 @@ sources:
               Timestamp of the last load performed by Fivetran.
             data_tests:
               - not_null
-
